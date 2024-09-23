@@ -59,6 +59,40 @@ app.get(
   }
 );
 
+// Get item by ID
+app.get(
+  '/items/:id',
+  {
+    schema: {
+      description: 'Get an item by ID',
+      tags: ['Items'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+        },
+      },
+      response: {
+        200: itemSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
+    const item = items.find(i => i.id === request.params.id);
+    if (!item) {
+      reply.status(404).send({ message: 'Item not found' });
+    } else {
+      return item;
+    }
+  }
+);
+
 // Create a new item
 app.post(
   '/items',
@@ -79,6 +113,85 @@ app.post(
     const newItem: Item = { id: currentId++, name: request.body.name };
     items.push(newItem);
     reply.status(201).send(newItem);
+  }
+);
+
+// Update an item by ID
+app.put(
+  '/items/:id',
+  {
+    schema: {
+      description: 'Update an item by ID',
+      tags: ['Items'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+        },
+      },
+      body: createUpdateItemSchema,
+      response: {
+        200: itemSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  async (
+    request: FastifyRequest<{ Params: { id: number }; Body: CreateUpdateItemRequest }>,
+    reply: FastifyReply
+  ) => {
+    const itemIndex = items.findIndex(i => i.id === request.params.id);
+    if (itemIndex === -1) {
+      reply.status(404).send({ message: 'Item not found' });
+    } else {
+      items[itemIndex].name = request.body.name;
+      return items[itemIndex];
+    }
+  }
+);
+
+// Delete an item by ID
+app.delete(
+  '/items/:id',
+  {
+    schema: {
+      description: 'Delete an item by ID',
+      tags: ['Items'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
+    const itemIndex = items.findIndex(i => i.id === request.params.id);
+    if (itemIndex === -1) {
+      reply.status(404).send({ message: 'Item not found' });
+    } else {
+      items.splice(itemIndex, 1);
+      reply.status(200).send({ message: 'Item deleted' });
+    }
   }
 );
 
