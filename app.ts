@@ -3,8 +3,12 @@ import fastify, {
   FastifyRequest,
   FastifyReply,
 } from 'fastify';
+import { setupSwagger } from './swagger.config';
 
 const app: FastifyInstance = fastify({ logger: true });
+
+// Setup Swagger
+setupSwagger(app);
 
 interface Item {
   id: number;
@@ -40,6 +44,8 @@ app.get(
   '/items',
   {
     schema: {
+      description: 'Get all items',
+      tags: ['Items'],
       response: {
         200: {
           type: 'array',
@@ -58,6 +64,8 @@ app.post(
   '/items',
   {
     schema: {
+      description: 'Create a new item',
+      tags: ['Items'],
       body: createUpdateItemSchema,
       response: {
         201: itemSchema,
@@ -77,10 +85,11 @@ app.post(
 // Start the server
 const start = async () => {
   try {
-    await app.listen({ port: 5000 });
+    await app.listen(5000);
     console.log('Server is running at http://localhost:5000');
+    console.log('Swagger docs available at http://localhost:5000/documentation');
   } catch (err) {
-    app.log.error(err);
+    console.error(err);
     process.exit(1);
   }
 };
